@@ -1,9 +1,16 @@
 package main
 
 import (
-	"fmt"
+	"log"
+
+	"github.com/wesley-lewis/distributed-cas/p2p"
 )
 
 func main() {
-	fmt.Println("Distributed CAS")
+	tr := p2p.NewTCPTransport(":3000")
+
+	if err := tr.ListenAndAccept(); err != nil {
+		log.Fatal(err)
+	}
+	select {}
 }
