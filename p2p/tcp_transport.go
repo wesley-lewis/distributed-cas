@@ -1,6 +1,7 @@
 package p2p
 
 import (
+	"fmt"
 	"net"
 	"sync"
 )
@@ -11,6 +12,23 @@ type TCPTransport struct {
 
 	mu    sync.RWMutex
 	peers map[net.Addr]Peer
+}
+
+// TCPPeer represents the remote node over a TCP established connection.
+type TCPPeer struct {
+	// conn is the underlying connection of the peer
+	conn net.Conn
+
+	// if we dial and retrieve a conn -> outbound == true
+	// if we accept and retrieve a conn -> outbound == false
+	outBound bool
+}
+
+func NewTCPPeer(conn net.Conn, outBound bool) *TCPPeer {
+	return &TCPPeer{
+		conn:     conn,
+		outBound: outBound,
+	}
 }
 
 func NewTCPTransport(ListenAddr string) *TCPTransport {
@@ -26,5 +44,22 @@ func (t *TCPTransport) ListenAndAccept() error {
 		return err
 	}
 
+	go t.startAcceptLoop()
+
 	return nil
+}
+
+func (t *TCPTransport) startAcceptLoop() {
+	for {
+		conn, err := t.listener.Accept()
+		if err != nil {
+			fmt.Printf("TCP accept error: %s\n", err)
+		}
+
+		go t.handleConn(conn)
+	}
+}
+
+func (t *TCPTransport) handleConn(conn net.Conn) {
+	fmt.Printf("New incoming connection %v\n", conn)
 }
