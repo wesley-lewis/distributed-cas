@@ -26,7 +26,7 @@ type TCPPeer struct {
 	outBound bool
 }
 
-func NOPHandhshakeFunc(any) error { return nil }
+func NOPHandhshakeFunc(Peer) error { return nil }
 
 func NewTCPPeer(conn net.Conn, outBound bool) *TCPPeer {
 	return &TCPPeer{
@@ -61,19 +61,28 @@ func (t *TCPTransport) startAcceptLoop() {
 			fmt.Printf("TCP accept error: %s\n", err)
 		}
 
+		fmt.Printf("New incoming connection %+v\n", conn)
 		go t.handleConn(conn)
 	}
 }
 
+type Temp struct{}
+
 func (t *TCPTransport) handleConn(conn net.Conn) {
 	peer := NewTCPPeer(conn, true)
 
-	if err := t.shakeHands(conn); err != nil {
-
+	if err := t.shakeHands(peer); err != nil {
+		conn.Close()
+		return
 	}
 
+	// Read loop
+	msg := &Temp{}
 	for {
-
+		if err := t.decoder.Decode(conn, msg); err != nil {
+			fmt.Printf("TCP error: %s\n", err)
+			continue
+		}
 	}
 	fmt.Printf("New incoming connection %v\n", peer)
 }
