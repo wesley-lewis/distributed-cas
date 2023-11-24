@@ -1,11 +1,12 @@
 package main
 
 import (
+	"bytes"
 	"crypto/sha1"
 	"encoding/hex"
 	"fmt"
-	"bytes"
 	"io"
+	"io/fs"
 	"log"
 	"os"
 	"strings"
@@ -39,6 +40,10 @@ type PathKey struct {
 	Filename string 
 }
 
+func(p PathKey) ParentDir() string {
+	return fmt.Sprintf("%s", strings.Split(p.Pathname, "/")[0])
+}
+
 func (p PathKey) FullPath() string {
 	return fmt.Sprintf("%s/%s", p.Pathname, p.Filename)
 }
@@ -55,6 +60,25 @@ func NewStore(storeOpts StoreOpts) *Store {
 	return &Store{
 		StoreOpts: storeOpts,
 	}
+}
+
+func(s *Store) Has(key string) bool {
+	pathKey := s.PathTransformFunc(key)
+	_, err := os.Stat(pathKey.FullPath())
+	if err == fs.ErrNotExist {
+		return true
+	}
+	return false
+}
+
+func(s *Store) Delete(key string) error {
+	pathKey := s.PathTransformFunc(key)
+
+	defer func() {
+		log.Printf("deleted [%s] from disk", pathKey.Filename)
+	}()
+	
+	return os.RemoveAll(pathKey.ParentDir())
 }
 
 func (s *Store) Read(key string) (io.Reader, error) {

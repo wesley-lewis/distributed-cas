@@ -56,4 +56,8 @@ func TestStoreDeleteKey(t *testing.T) {
 	if err := s.Delete(key); err != nil {
 		t.Errorf("Error while deleting")
 	}
+
+	if s.Has(key) {
+		t.Errorf("Error while deleting")
+	}
 }
