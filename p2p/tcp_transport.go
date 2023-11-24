@@ -58,6 +58,7 @@ func (t *TCPTransport) Consume() <-chan RPC {
 func (t *TCPTransport) ListenAndAccept() error {
 	var err error
 	t.listener, err = net.Listen("tcp", t.ListenAddr)
+	fmt.Println("Listening on port:", t.ListenAddr)
 	if err != nil {
 		return err
 	}
@@ -78,8 +79,6 @@ func (t *TCPTransport) startAcceptLoop() {
 		go t.handleConn(conn)
 	}
 }
-
-type Temp struct{}
 
 func (t *TCPTransport) handleConn(conn net.Conn) {
 	var err error
